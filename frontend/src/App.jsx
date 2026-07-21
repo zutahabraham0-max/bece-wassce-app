@@ -25,7 +25,7 @@ function App() {
   const [materialContent, setMaterialContent] = useState('');
 
   useEffect(() => {
-    fetch('http://localhost:3000/subjects')
+    fetch('https://bece-wassce-backend.onrender.com/subjects')
       .then(res => res.json())
       .then(data => setSubjects(data));
   }, []);
@@ -33,22 +33,22 @@ function App() {
   const loadSubjectData = (subjectId) => {
     setSelectedSubject(subjectId);
 
-    fetch(`http://localhost:3000/questions?subject_id=${subjectId}`)
+    fetch(`https://bece-wassce-backend.onrender.com/questions?subject_id=${subjectId}`)
       .then(res => res.json())
       .then(data => setQuestions(data));
 
-    fetch(`http://localhost:3000/careers?subject_id=${subjectId}`)
+    fetch(`https://bece-wassce-backend.onrender.com/careers?subject_id=${subjectId}`)
       .then(res => res.json())
       .then(data => setCareers(data));
 
-    fetch(`http://localhost:3000/materials?subject_id=${subjectId}`)
+    fetch(`https://bece-wassce-backend.onrender.com/materials?subject_id=${subjectId}`)
       .then(res => res.json())
       .then(data => setMaterials(data));
   };
 
   const handleAddQuestion = (e) => {
     e.preventDefault();
-    fetch('http://localhost:3000/questions', {
+    fetch('https://bece-wassce-backend.onrender.com/questions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -70,7 +70,7 @@ function App() {
 
   const handleAddCareer = (e) => {
     e.preventDefault();
-    fetch('http://localhost:3000/careers', {
+    fetch('https://bece-wassce-backend.onrender.com/careers', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -91,7 +91,7 @@ function App() {
 
   const handleAddMaterial = (e) => {
     e.preventDefault();
-    fetch('http://localhost:3000/materials', {
+    fetch('https://bece-wassce-backend.onrender.com/materials', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -109,21 +109,21 @@ function App() {
   };
 const handleDeleteQuestion = (id) => {
     if (window.confirm('Delete this question? This cannot be undone.')) {
-      fetch(`http://localhost:3000/questions/${id}`, { method: 'DELETE' })
+      fetch(`https://bece-wassce-backend.onrender.com/questions/${id}`, { method: 'DELETE' })
         .then(() => loadSubjectData(selectedSubject));
     }
   };
 
   const handleDeleteCareer = (id) => {
     if (window.confirm('Delete this career? This cannot be undone.')) {
-      fetch(`http://localhost:3000/careers/${id}`, { method: 'DELETE' })
+      fetch(`https://bece-wassce-backend.onrender.com/careers/${id}`, { method: 'DELETE' })
         .then(() => loadSubjectData(selectedSubject));
     }
   };
 
   const handleDeleteMaterial = (id) => {
     if (window.confirm('Delete this material? This cannot be undone.')) {
-      fetch(`http://localhost:3000/materials/${id}`, { method: 'DELETE' })
+      fetch(`https://bece-wassce-backend.onrender.com/materials/${id}`, { method: 'DELETE' })
         .then(() => loadSubjectData(selectedSubject));
     }
   };
