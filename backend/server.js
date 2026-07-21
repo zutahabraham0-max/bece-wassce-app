@@ -1,11 +1,11 @@
 const express = require('express');
-const db = require('./database');
 const cors = require('cors');
+const { pool, setupTables } = require('./database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-app.use(cors());
 
+app.use(cors());
 app.use(express.json());
 
 // Test route
@@ -13,111 +13,122 @@ app.get('/', (req, res) => {
   res.send('BECE/WASSCE App backend is running!');
 });
 
-// Get all subjects
-app.get('/subjects', (req, res) => {
-  const subjects = db.prepare('SELECT * FROM subjects').all();
-  res.json(subjects);
+// ---------- SUBJECTS ----------
+
+app.get('/subjects', async (req, res) => {
+  const result = await pool.query('SELECT * FROM subjects ORDER BY id');
+  res.json(result.rows);
 });
 
-// Add a new subject
-app.post('/subjects', (req, res) => {
+app.post('/subjects', async (req, res) => {
   const { name, level } = req.body;
-  const stmt = db.prepare('INSERT INTO subjects (name, level) VALUES (?, ?)');
-  const result = stmt.run(name, level);
-  res.json({ id: result.lastInsertRowid, name, level });
+  const result = await pool.query(
+    'INSERT INTO subjects (name, level) VALUES ($1, $2) RETURNING *',
+    [name, level]
+  );
+  res.json(result.rows[0]);
 });
-// Delete a subject by id
-app.delete('/subjects/:id', (req, res) => {
+
+app.delete('/subjects/:id', async (req, res) => {
   const { id } = req.params;
-  db.prepare('DELETE FROM subjects WHERE id = ?').run(id);
+  await pool.query('DELETE FROM subjects WHERE id = $1', [id]);
   res.json({ message: `Subject ${id} deleted` });
 });
-// Get all questions (optionally filter by subject)
-app.get('/questions', (req, res) => {
+
+// ---------- QUESTIONS ----------
+
+app.get('/questions', async (req, res) => {
   const { subject_id } = req.query;
-  let questions;
+  let result;
   if (subject_id) {
-    questions = db.prepare('SELECT * FROM questions WHERE subject_id = ?').all(subject_id);
+    result = await pool.query('SELECT * FROM questions WHERE subject_id = $1 ORDER BY id', [subject_id]);
   } else {
-    questions = db.prepare('SELECT * FROM questions').all();
+    result = await pool.query('SELECT * FROM questions ORDER BY id');
   }
-  res.json(questions);
+  res.json(result.rows);
 });
 
-// Add a new question
-app.post('/questions', (req, res) => {
+app.post('/questions', async (req, res) => {
   const { subject_id, year, exam_type, question_text, answer_text } = req.body;
-  const stmt = db.prepare(
-    'INSERT INTO questions (subject_id, year, exam_type, question_text, answer_text) VALUES (?, ?, ?, ?, ?)'
+  const result = await pool.query(
+    `INSERT INTO questions (subject_id, year, exam_type, question_text, answer_text)
+     VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+    [subject_id, year, exam_type, question_text, answer_text]
   );
-  const result = stmt.run(subject_id, year, exam_type, question_text, answer_text);
-  res.json({ id: result.lastInsertRowid, subject_id, year, exam_type, question_text, answer_text });
+  res.json(result.rows[0]);
 });
 
-// Delete a question by id
-app.delete('/questions/:id', (req, res) => {
+app.delete('/questions/:id', async (req, res) => {
   const { id } = req.params;
-  db.prepare('DELETE FROM questions WHERE id = ?').run(id);
+  await pool.query('DELETE FROM questions WHERE id = $1', [id]);
   res.json({ message: `Question ${id} deleted` });
 });
-// Get all careers (optionally filter by subject)
-app.get('/careers', (req, res) => {
+
+// ---------- CAREERS ----------
+
+app.get('/careers', async (req, res) => {
   const { subject_id } = req.query;
-  let careers;
+  let result;
   if (subject_id) {
-    careers = db.prepare('SELECT * FROM careers WHERE subject_id = ?').all(subject_id);
+    result = await pool.query('SELECT * FROM careers WHERE subject_id = $1 ORDER BY id', [subject_id]);
   } else {
-    careers = db.prepare('SELECT * FROM careers').all();
+    result = await pool.query('SELECT * FROM careers ORDER BY id');
   }
-  res.json(careers);
+  res.json(result.rows);
 });
 
-// Add a new career
-app.post('/careers', (req, res) => {
+app.post('/careers', async (req, res) => {
   const { subject_id, program, career_title, description } = req.body;
-  const stmt = db.prepare(
-    'INSERT INTO careers (subject_id, program, career_title, description) VALUES (?, ?, ?, ?)'
+  const result = await pool.query(
+    `INSERT INTO careers (subject_id, program, career_title, description)
+     VALUES ($1, $2, $3, $4) RETURNING *`,
+    [subject_id, program, career_title, description]
   );
-  const result = stmt.run(subject_id, program, career_title, description);
-  res.json({ id: result.lastInsertRowid, subject_id, program, career_title, description });
+  res.json(result.rows[0]);
 });
 
-// Delete a career by id
-app.delete('/careers/:id', (req, res) => {
+app.delete('/careers/:id', async (req, res) => {
   const { id } = req.params;
-  db.prepare('DELETE FROM careers WHERE id = ?').run(id);
+  await pool.query('DELETE FROM careers WHERE id = $1', [id]);
   res.json({ message: `Career ${id} deleted` });
 });
 
-// Get all materials (optionally filter by subject)
-app.get('/materials', (req, res) => {
+// ---------- MATERIALS ----------
+
+app.get('/materials', async (req, res) => {
   const { subject_id } = req.query;
-  let materials;
+  let result;
   if (subject_id) {
-    materials = db.prepare('SELECT * FROM materials WHERE subject_id = ?').all(subject_id);
+    result = await pool.query('SELECT * FROM materials WHERE subject_id = $1 ORDER BY id', [subject_id]);
   } else {
-    materials = db.prepare('SELECT * FROM materials').all();
+    result = await pool.query('SELECT * FROM materials ORDER BY id');
   }
-  res.json(materials);
+  res.json(result.rows);
 });
 
-// Add new material
-app.post('/materials', (req, res) => {
+app.post('/materials', async (req, res) => {
   const { subject_id, title, content } = req.body;
-  const stmt = db.prepare(
-    'INSERT INTO materials (subject_id, title, content) VALUES (?, ?, ?)'
+  const result = await pool.query(
+    `INSERT INTO materials (subject_id, title, content) VALUES ($1, $2, $3) RETURNING *`,
+    [subject_id, title, content]
   );
-  const result = stmt.run(subject_id, title, content);
-  res.json({ id: result.lastInsertRowid, subject_id, title, content });
+  res.json(result.rows[0]);
 });
 
-// Delete material by id
-app.delete('/materials/:id', (req, res) => {
+app.delete('/materials/:id', async (req, res) => {
   const { id } = req.params;
-  db.prepare('DELETE FROM materials WHERE id = ?').run(id);
+  await pool.query('DELETE FROM materials WHERE id = $1', [id]);
   res.json({ message: `Material ${id} deleted` });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
-});
+// ---------- START SERVER ----------
+
+setupTables()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server running at http://localhost:${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error('Failed to set up database tables:', err);
+  });
