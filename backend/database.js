@@ -28,6 +28,14 @@ async function setupTables() {
   `);
 
   await pool.query(`
+    ALTER TABLE questions ADD COLUMN IF NOT EXISTS option_a TEXT;
+    ALTER TABLE questions ADD COLUMN IF NOT EXISTS option_b TEXT;
+    ALTER TABLE questions ADD COLUMN IF NOT EXISTS option_c TEXT;
+    ALTER TABLE questions ADD COLUMN IF NOT EXISTS option_d TEXT;
+    ALTER TABLE questions ADD COLUMN IF NOT EXISTS correct_option TEXT;
+  `);
+
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS careers (
       id SERIAL PRIMARY KEY,
       subject_id INTEGER REFERENCES subjects(id),

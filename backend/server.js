@@ -58,12 +58,12 @@ app.get('/questions', async (req, res) => {
   res.json(result.rows);
 });
 
-app.post('/questions',requireAdmin, async (req, res) => {
-  const { subject_id, year, exam_type, question_text, answer_text } = req.body;
+app.post('/questions', requireAdmin, async (req, res) => {
+  const { subject_id, year, exam_type, question_text, answer_text, option_a, option_b, option_c, option_d, correct_option } = req.body;
   const result = await pool.query(
-    `INSERT INTO questions (subject_id, year, exam_type, question_text, answer_text)
-     VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-    [subject_id, year, exam_type, question_text, answer_text]
+    `INSERT INTO questions (subject_id, year, exam_type, question_text, answer_text, option_a, option_b, option_c, option_d, correct_option)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
+    [subject_id, year, exam_type, question_text, answer_text, option_a, option_b, option_c, option_d, correct_option]
   );
   res.json(result.rows[0]);
 });

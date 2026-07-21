@@ -22,6 +22,11 @@ function App() {
   const [examType, setExamType] = useState('BECE');
   const [questionText, setQuestionText] = useState('');
   const [answerText, setAnswerText] = useState('');
+  const [optionA, setOptionA] = useState('');
+  const [optionB, setOptionB] = useState('');
+  const [optionC, setOptionC] = useState('');
+  const [optionD, setOptionD] = useState('');
+  const [correctOption, setCorrectOption] = useState('A');
 
   // Career form state
   const [program, setProgram] = useState('');
@@ -35,6 +40,12 @@ function App() {
   // Subject form state
   const [subjectName, setSubjectName] = useState('');
   const [subjectLevel, setSubjectLevel] = useState('JHS');
+  // Quiz state
+  const [quizMode, setQuizMode] = useState(false);
+  const [quizIndex, setQuizIndex] = useState(0);
+  const [quizSelected, setQuizSelected] = useState(null);
+  const [quizScore, setQuizScore] = useState(0);
+  const [quizFinished, setQuizFinished] = useState(false);
 
   useEffect(() => {
     fetch(`${API_URL}/subjects`)
@@ -61,6 +72,35 @@ function App() {
     fetch(`${API_URL}/materials?subject_id=${subjectId}`)
       .then(res => res.json())
       .then(data => setMaterials(data));
+  };
+  const startQuiz = () => {
+    setQuizMode(true);
+    setQuizIndex(0);
+    setQuizSelected(null);
+    setQuizScore(0);
+    setQuizFinished(false);
+  };
+
+  const exitQuiz = () => {
+    setQuizMode(false);
+  };
+
+  const selectQuizAnswer = (option) => {
+    if (quizSelected) return; // already answered this question
+    setQuizSelected(option);
+    const current = questions[quizIndex];
+    if (option === current.correct_option) {
+      setQuizScore(prev => prev + 1);
+    }
+  };
+
+  const nextQuizQuestion = () => {
+    if (quizIndex + 1 < questions.length) {
+      setQuizIndex(prev => prev + 1);
+      setQuizSelected(null);
+    } else {
+      setQuizFinished(true);
+    }
   };
 
   const verifyAdminKey = (key, silent) => {
@@ -126,6 +166,11 @@ function App() {
         exam_type: examType,
         question_text: questionText,
         answer_text: answerText,
+        option_a: optionA,
+        option_b: optionB,
+        option_c: optionC,
+        option_d: optionD,
+        correct_option: correctOption,
       }),
     })
       .then(res => res.json())
@@ -133,6 +178,11 @@ function App() {
         setYear('');
         setQuestionText('');
         setAnswerText('');
+        setOptionA('');
+        setOptionB('');
+        setOptionC('');
+        setOptionD('');
+        setCorrectOption('A');
         loadSubjectData(selectedSubject);
       });
   };
@@ -265,10 +315,78 @@ function App() {
       )}
 
       {selectedSubject && (
-        <>
-          <h2 className="section-title">
+        <><h2 className="section-title">
             Questions {activeSubject ? `— ${activeSubject.name}` : ''}
           </h2>
+
+          {!quizMode && questions.some(q => q.option_a) && (
+            <button className="q-form" style={{ display: 'block', marginBottom: '1.5rem', cursor: 'pointer', fontWeight: 700 }} onClick={startQuiz}>
+              Take Quiz ({questions.filter(q => q.option_a).length} questions)
+            </button>
+          )}
+
+          {quizMode && (
+            <div className="q-form" style={{ marginBottom: '2rem' }}>
+              {!quizFinished ? (
+                <>
+                  {(() => {
+                    const quizQuestions = questions.filter(q => q.option_a);
+                    const current = quizQuestions[quizIndex];
+                    if (!current) return <p>No quiz questions available.</p>;
+                    return (
+                      <>
+                        <p className="meta">Question {quizIndex + 1} of {quizQuestions.length}</p>
+                        <p className="q-text" style={{ fontWeight: 700 }}>{current.question_text}</p>
+
+                        {['A', 'B', 'C', 'D'].map(opt => {
+                          const optionText = current[`option_${opt.toLowerCase()}`];
+                          let bg = 'var(--card)';
+                          if (quizSelected) {
+                            if (opt === current.correct_option) bg = '#d1fadf';
+                            else if (opt === quizSelected) bg = '#fde2e2';
+                          }
+                          return (
+                            <button
+                              key={opt}
+                              onClick={() => selectQuizAnswer(opt)}
+                              style={{
+                                display: 'block',
+                                width: '100%',
+                                textAlign: 'left',
+                                padding: '0.7rem 1rem',
+                                marginBottom: '0.5rem',
+                                borderRadius: '10px',
+                                border: '1px solid var(--border)',
+                                background: bg,
+                                cursor: quizSelected ? 'default' : 'pointer',
+                              }}
+                            >
+                              <strong>{opt}.</strong> {optionText}
+                            </button>
+                          );
+                        })}
+
+                        {quizSelected && (
+                          <button onClick={nextQuizQuestion} style={{ marginTop: '1rem' }}>
+                            {quizIndex + 1 < quizQuestions.length ? 'Next Question' : 'Finish Quiz'}
+                          </button>
+                        )}
+                      </>
+                    );
+                  })()}
+                </>
+              ) : (
+                <>
+                  <p className="q-text" style={{ fontWeight: 700 }}>
+                    Quiz complete! Score: {quizScore} / {questions.filter(q => q.option_a).length}
+                  </p>
+                  <button onClick={startQuiz}>Retry Quiz</button>
+                </>
+              )}
+              <button className="delete-btn" style={{ marginTop: '1rem' }} onClick={exitQuiz}>Exit Quiz</button>
+            </div>
+          )}
+          
 
           {questions.length === 0 && (
             <p className="empty-note">No questions recorded yet for this subject.</p>
@@ -305,8 +423,33 @@ function App() {
                   <textarea value={questionText} onChange={(e) => setQuestionText(e.target.value)} required />
                 </div>
                 <div className="field">
-                  <label>Answer</label>
+                  <label>Answer (explanation)</label>
                   <textarea value={answerText} onChange={(e) => setAnswerText(e.target.value)} required />
+                </div>
+                <div className="field">
+                  <label>Option A</label>
+                  <input type="text" value={optionA} onChange={(e) => setOptionA(e.target.value)} required />
+                </div>
+                <div className="field">
+                  <label>Option B</label>
+                  <input type="text" value={optionB} onChange={(e) => setOptionB(e.target.value)} required />
+                </div>
+                <div className="field">
+                  <label>Option C</label>
+                  <input type="text" value={optionC} onChange={(e) => setOptionC(e.target.value)} required />
+                </div>
+                <div className="field">
+                  <label>Option D</label>
+                  <input type="text" value={optionD} onChange={(e) => setOptionD(e.target.value)} required />
+                </div>
+                <div className="field">
+                  <label>Correct Option</label>
+                  <select value={correctOption} onChange={(e) => setCorrectOption(e.target.value)}>
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                    <option value="C">C</option>
+                    <option value="D">D</option>
+                  </select>
                 </div>
                 <button type="submit">Add Question</button>
               </form>
