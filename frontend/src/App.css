@@ -1,0 +1,247 @@
+:root {
+  --bg: #f5f7fb;
+  --ink: #1b2559;
+  --ink-soft: #6b7290;
+  --primary: #4f46e5;
+  --primary-soft: #eef0ff;
+  --success: #0ea5a0;
+  --danger: #e5484d;
+  --card: #ffffff;
+  --border: #e4e7f2;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+.app {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 5rem;
+}
+
+.masthead {
+  margin-bottom: 2rem;
+}
+
+.masthead .eyebrow {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--primary);
+  background: var(--primary-soft);
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  margin-bottom: 0.7rem;
+}
+
+.masthead h1 {
+  font-size: 1.9rem;
+  font-weight: 800;
+  margin: 0 0 0.4rem;
+  letter-spacing: -0.01em;
+}
+
+.masthead p {
+  color: var(--ink-soft);
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+h2.section-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 2.2rem 0 1rem;
+  padding-bottom: 0;
+  border-bottom: none;
+  text-transform: none;
+  letter-spacing: 0;
+  font-family: inherit;
+}
+
+.subject-grid {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.7rem;
+}
+
+.subject-btn {
+  width: 100%;
+  text-align: left;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 0.9rem 1rem;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(27, 37, 89, 0.04);
+  transition: all 0.15s ease;
+}
+
+.subject-btn:hover {
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.12);
+  transform: translateY(-1px);
+}
+
+.subject-btn.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+.subject-btn .level-tag {
+  display: inline-block;
+  margin-top: 0.4rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--primary);
+  background: var(--primary-soft);
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+}
+
+.subject-btn.active .level-tag {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.question-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.1rem 1.3rem;
+  margin-bottom: 0.9rem;
+  box-shadow: 0 1px 2px rgba(27, 37, 89, 0.04);
+}
+
+.question-card .meta {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--primary);
+  margin-bottom: 0.5rem;
+}
+
+.question-card .q-text {
+  margin: 0 0 0.6rem;
+  line-height: 1.55;
+  font-size: 0.95rem;
+}
+
+.question-card .answer {
+  font-size: 0.88rem;
+  color: var(--success);
+  font-weight: 600;
+  border-top: 1px solid var(--border);
+  padding-top: 0.6rem;
+  margin: 0;
+}
+
+.empty-note {
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  background: var(--card);
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.q-form {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.3rem;
+  max-width: 480px;
+  box-shadow: 0 1px 2px rgba(27, 37, 89, 0.04);
+}
+
+.q-form .field {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.q-form label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.q-form input,
+.q-form select,
+.q-form textarea {
+  font-family: inherit;
+  font-size: 0.9rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.q-form input:focus,
+.q-form select:focus,
+.q-form textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.q-form textarea {
+  min-height: 70px;
+  resize: vertical;
+}
+
+.q-form button {
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.85rem;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 0.75rem 1.3rem;
+  cursor: pointer;
+}
+
+.q-form button:hover {
+  opacity: 0.9;
+}
+
+.delete-btn {
+  margin-top: 0.8rem;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  background: transparent;
+  border: 1px solid var(--danger);
+  color: var(--danger);
+  border-radius: 8px;
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+}
+
+.delete-btn:hover {
+  background: var(--danger);
+  color: #fff;
+}
