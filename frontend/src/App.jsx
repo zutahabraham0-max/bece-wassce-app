@@ -358,6 +358,7 @@ function App() {
                                 borderRadius: '10px',
                                 border: '1px solid var(--border)',
                                 background: bg,
+                                color: 'var(--ink)',
                                 cursor: quizSelected ? 'default' : 'pointer',
                               }}
                             >
