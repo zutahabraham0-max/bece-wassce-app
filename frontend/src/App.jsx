@@ -60,6 +60,10 @@ function App() {
   const [quizScore, setQuizScore] = useState(0);
   const [quizFinished, setQuizFinished] = useState(false);
 
+  // Edit state
+  const [editingQuestionId, setEditingQuestionId] = useState(null);
+  const [editQuestion, setEditQuestion] = useState({});
+
   // Search & filter state
   const [searchTerm, setSearchTerm] = useState('');
   const [filterYear, setFilterYear] = useState('All');
@@ -336,6 +340,29 @@ function App() {
       fetch(`${API_URL}/questions/${id}`, { method: 'DELETE', headers: authHeaders })
         .then(() => loadSubjectData(selectedSubject));
     }
+  };
+
+  const startEditQuestion = (q) => {
+    setEditingQuestionId(q.id);
+    setEditQuestion({ ...q });
+  };
+
+  const cancelEditQuestion = () => {
+    setEditingQuestionId(null);
+    setEditQuestion({});
+  };
+
+  const saveEditQuestion = () => {
+    fetch(`${API_URL}/questions/${editingQuestionId}`, {
+      method: 'PUT',
+      headers: authHeaders,
+      body: JSON.stringify(editQuestion),
+    })
+      .then(res => res.json())
+      .then(() => {
+        setEditingQuestionId(null);
+        loadSubjectData(selectedSubject);
+      });
   };
 
   const handleDeleteCareer = (id) => {
@@ -649,17 +676,72 @@ function App() {
           {questions.length > 0 && filteredQuestions.length === 0 && (
             <p className="empty-note">No questions match your search.</p>
           )}
-
-          {filteredQuestions.map(q => (
+{filteredQuestions.map(q => (
             <div className="question-card" key={q.id}>
-              <p className="meta">{q.exam_type} {q.year}</p>
-              <p className="q-text">{q.question_text}</p>
-              <p className="answer">Answer: {q.answer_text}</p>
-              {isAdmin && (
-                <button className="delete-btn" onClick={() => handleDeleteQuestion(q.id)}>Delete</button>
+              {editingQuestionId === q.id ? (
+                <>
+                  <div className="field">
+                    <label>Question</label>
+                    <textarea
+                      value={editQuestion.question_text}
+                      onChange={(e) => setEditQuestion({ ...editQuestion, question_text: e.target.value })}
+                    />
+                  </div>
+                  <div className="field">
+                    <label>Answer</label>
+                    <textarea
+                      value={editQuestion.answer_text}
+                      onChange={(e) => setEditQuestion({ ...editQuestion, answer_text: e.target.value })}
+                    />
+                  </div>
+                  {editQuestion.option_a !== undefined && editQuestion.option_a !== null && (
+                    <>
+                      <div className="field">
+                        <label>Option A</label>
+                        <input type="text" value={editQuestion.option_a || ''} onChange={(e) => setEditQuestion({ ...editQuestion, option_a: e.target.value })} />
+                      </div>
+                      <div className="field">
+                        <label>Option B</label>
+                        <input type="text" value={editQuestion.option_b || ''} onChange={(e) => setEditQuestion({ ...editQuestion, option_b: e.target.value })} />
+                      </div>
+                      <div className="field">
+                        <label>Option C</label>
+                        <input type="text" value={editQuestion.option_c || ''} onChange={(e) => setEditQuestion({ ...editQuestion, option_c: e.target.value })} />
+                      </div>
+                      <div className="field">
+                        <label>Option D</label>
+                        <input type="text" value={editQuestion.option_d || ''} onChange={(e) => setEditQuestion({ ...editQuestion, option_d: e.target.value })} />
+                      </div>
+                      <div className="field">
+                        <label>Correct Option</label>
+                        <select value={editQuestion.correct_option || 'A'} onChange={(e) => setEditQuestion({ ...editQuestion, correct_option: e.target.value })}>
+                          <option value="A">A</option>
+                          <option value="B">B</option>
+                          <option value="C">C</option>
+                          <option value="D">D</option>
+                        </select>
+                      </div>
+                    </>
+                  )}
+                  <button onClick={saveEditQuestion}>Save</button>
+                  <button className="delete-btn" onClick={cancelEditQuestion} style={{ marginLeft: '0.5rem' }}>Cancel</button>
+                </>
+              ) : (
+                <>
+                  <p className="meta">{q.exam_type} {q.year}</p>
+                  <p className="q-text">{q.question_text}</p>
+                  <p className="answer">Answer: {q.answer_text}</p>
+                  {isAdmin && (
+                    <>
+                      <button onClick={() => startEditQuestion(q)}>Edit</button>
+                      <button className="delete-btn" onClick={() => handleDeleteQuestion(q.id)} style={{ marginLeft: '0.5rem' }}>Delete</button>
+                    </>
+                  )}
+                </>
               )}
             </div>
           ))}
+          
 
           {isAdmin && (
             <>
