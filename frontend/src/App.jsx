@@ -47,6 +47,10 @@ function App() {
   const [quizScore, setQuizScore] = useState(0);
   const [quizFinished, setQuizFinished] = useState(false);
 
+  // Search & filter state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterYear, setFilterYear] = useState('All');
+
   useEffect(() => {
     fetch(`${API_URL}/subjects`)
       .then(res => res.json())
@@ -250,6 +254,14 @@ function App() {
 
   const activeSubject = subjects.find(s => s.id === selectedSubject);
 
+  const availableYears = ['All', ...new Set(questions.map(q => q.year))].sort();
+
+  const filteredQuestions = questions.filter(q => {
+    const matchesSearch = q.question_text.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesYear = filterYear === 'All' || q.year === Number(filterYear);
+    return matchesSearch && matchesYear;
+  });
+
   return (
     <div className="app">
       <header className="masthead">
@@ -389,11 +401,37 @@ function App() {
           )}
           
 
+          {questions.length > 0 && (
+            <div className="q-form" style={{ marginBottom: '1.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+              <div className="field" style={{ flex: 2, minWidth: '200px' }}>
+                <label>Search Questions</label>
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Type a keyword..."
+                />
+              </div>
+              <div className="field" style={{ flex: 1, minWidth: '120px' }}>
+                <label>Filter by Year</label>
+                <select value={filterYear} onChange={(e) => setFilterYear(e.target.value)}>
+                  {availableYears.map(y => (
+                    <option key={y} value={y}>{y}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+
           {questions.length === 0 && (
             <p className="empty-note">No questions recorded yet for this subject.</p>
           )}
 
-          {questions.map(q => (
+          {questions.length > 0 && filteredQuestions.length === 0 && (
+            <p className="empty-note">No questions match your search.</p>
+          )}
+
+          {filteredQuestions.map(q => (
             <div className="question-card" key={q.id}>
               <p className="meta">{q.exam_type} {q.year}</p>
               <p className="q-text">{q.question_text}</p>
