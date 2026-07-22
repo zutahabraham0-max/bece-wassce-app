@@ -69,6 +69,8 @@ function App() {
 
   const [editingMaterialId, setEditingMaterialId] = useState(null);
   const [editMaterial, setEditMaterial] = useState({});
+  const [editingSubjectId, setEditingSubjectId] = useState(null);
+  const [editSubject, setEditSubject] = useState({});
 
   // Search & filter state
   const [searchTerm, setSearchTerm] = useState('');
@@ -413,6 +415,27 @@ function App() {
       });
   };
 
+const startEditSubject = (s) => {
+    setEditingSubjectId(s.id);
+    setEditSubject({ ...s });
+  };
+  const cancelEditSubject = () => {
+    setEditingSubjectId(null);
+    setEditSubject({});
+  };
+  const saveEditSubject = () => {
+    fetch(`${API_URL}/subjects/${editingSubjectId}`, {
+      method: 'PUT',
+      headers: authHeaders,
+      body: JSON.stringify(editSubject),
+    })
+      .then(res => res.json())
+      .then((updated) => {
+        setSubjects(prev => prev.map(s => s.id === updated.id ? updated : s));
+        setEditingSubjectId(null);
+      });
+  };
+
   const handleDeleteCareer = (id) => {
     if (window.confirm('Delete this career? This cannot be undone.')) {
       fetch(`${API_URL}/careers/${id}`, { method: 'DELETE', headers: authHeaders })
@@ -567,13 +590,45 @@ function App() {
       <ul className="subject-grid">
         {subjects.map(subject => (
           <li key={subject.id}>
-            <button
-              className={`subject-btn ${selectedSubject === subject.id ? 'active' : ''}`}
-              onClick={() => loadSubjectData(subject.id)}
-            >
-              {subject.name}
-              <span className="level-tag">{subject.level}</span>
-            </button>
+            {editingSubjectId === subject.id ? (
+              <div className="q-form">
+                <div className="field">
+                  <label>Name</label>
+                  <input type="text" value={editSubject.name || ''} onChange={(e) => setEditSubject({ ...editSubject, name: e.target.value })} />
+                </div>
+                <div className="field">
+                  <label>Level</label>
+                  <select value={editSubject.level || 'JHS'} onChange={(e) => setEditSubject({ ...editSubject, level: e.target.value })}>
+                    <option value="JHS">JHS</option>
+                    <option value="SHS">SHS</option>
+                  </select>
+                </div>
+                <button onClick={saveEditSubject}>Save</button>
+                <button className="delete-btn" onClick={cancelEditSubject} style={{ marginLeft: '0.5rem' }}>Cancel</button>
+              </div>
+            ) : (
+              <div style={{ position: 'relative' }}>
+                <button
+                  className={`subject-btn ${selectedSubject === subject.id ? 'active' : ''}`}
+                  onClick={() => loadSubjectData(subject.id)}
+                >
+                  {subject.name}
+                  <span className="level-tag">{subject.level}</span>
+                </button>
+                {isAdmin && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); startEditSubject(subject); }}
+                    style={{
+                      position: 'absolute', top: '6px', right: '6px',
+                      background: 'transparent', border: 'none',
+                      fontSize: '0.7rem', color: 'var(--ink-soft)', cursor: 'pointer',
+                    }}
+                  >
+                    Edit
+                  </button>
+                )}
+              </div>
+            )}
           </li>
         ))}
       </ul>
