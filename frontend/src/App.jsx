@@ -17,6 +17,17 @@ function App() {
   const [adminInput, setAdminInput] = useState('');
   const [adminError, setAdminError] = useState('');
 
+  // User auth state
+  const [user, setUser] = useState(null);
+  const [userToken, setUserToken] = useState('');
+  const [authMode, setAuthMode] = useState('login'); // 'login' or 'signup'
+  const [authName, setAuthName] = useState('');
+  const [authEmail, setAuthEmail] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+  const [authError, setAuthError] = useState('');
+
+  const [quizResults, setQuizResults] = useState([]);
+
   // Question form state
   const [year, setYear] = useState('');
   const [examType, setExamType] = useState('BECE');
@@ -60,7 +71,23 @@ function App() {
     if (savedKey) {
       verifyAdminKey(savedKey, true);
     }
+
+   const savedUser = localStorage.getItem('user');
+    const savedToken = localStorage.getItem('userToken');
+    if (savedUser && savedToken) {
+      setUser(JSON.parse(savedUser));
+      setUserToken(savedToken);
+      fetchQuizResults(savedToken);
+    }
   }, []);
+
+  const fetchQuizResults = (token) => {
+    fetch(`${API_URL}/quiz-results`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    })
+      .then(res => res.json())
+      .then(data => setQuizResults(data));
+  };
 
   const loadSubjectData = (subjectId) => {
     setSelectedSubject(subjectId);
@@ -110,16 +137,29 @@ function App() {
   };
 
   const saveQuizProgress = (subjectId, score, total) => {
-    const stored = JSON.parse(localStorage.getItem('quizProgress') || '{}');
-    const existing = stored[subjectId] || { attempts: 0, bestScore: 0, bestTotal: total };
-    stored[subjectId] = {
-      attempts: existing.attempts + 1,
-      lastScore: score,
-      lastTotal: total,
-      bestScore: Math.max(existing.bestScore, score),
-      bestTotal: total,
-    };
-    localStorage.setItem('quizProgress', JSON.stringify(stored));
+    if (user && userToken) {
+      // Logged in — save to the database
+      fetch(`${API_URL}/quiz-results`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${userToken}`,
+        },
+        body: JSON.stringify({ subject_id: subjectId, score, total }),
+      }).then(() => fetchQuizResults(userToken));
+    } else {
+      // Not logged in — fall back to localStorage
+      const stored = JSON.parse(localStorage.getItem('quizProgress') || '{}');
+      const existing = stored[subjectId] || { attempts: 0, bestScore: 0, bestTotal: total };
+      stored[subjectId] = {
+        attempts: existing.attempts + 1,
+        lastScore: score,
+        lastTotal: total,
+        bestScore: Math.max(existing.bestScore, score),
+        bestTotal: total,
+      };
+      localStorage.setItem('quizProgress', JSON.stringify(stored));
+    }
   };
 
   const getQuizProgress = (subjectId) => {
@@ -158,6 +198,44 @@ function App() {
     setAdminKey('');
     setAdminInput('');
     sessionStorage.removeItem('adminKey');
+  };
+
+  const handleAuthSubmit = (e) => {
+    e.preventDefault();
+    setAuthError('');
+    const endpoint = authMode === 'signup' ? '/auth/signup' : '/auth/login';
+    const body = authMode === 'signup'
+      ? { name: authName, email: authEmail, password: authPassword }
+      : { email: authEmail, password: authPassword };
+
+    fetch(`${API_URL}${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+      .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Something went wrong.');
+        return data;
+      })
+      .then(({ user, token }) => {
+        setUser(user);
+        setUserToken(token);
+        localStorage.setItem('user', JSON.stringify(user));
+        localStorage.setItem('userToken', token);
+        fetchQuizResults(token);
+        setAuthName('');
+        setAuthEmail('');
+        setAuthPassword('');
+      })
+      .catch((err) => setAuthError(err.message));
+  };
+
+  const handleUserLogout = () => {
+    setUser(null);
+    setUserToken('');
+    localStorage.removeItem('user');
+    localStorage.removeItem('userToken');
   };
 
   const authHeaders = {
@@ -289,6 +367,80 @@ function App() {
         <h1>BECE / WASSCE Past Questions</h1>
         <p>A running record of past questions, worked answers, study notes, and career paths.</p>
       </header>
+
+      {!user ? (
+        <form className="q-form" onSubmit={handleAuthSubmit} style={{ marginBottom: '1rem' }}>
+          <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+            <button
+              type="button"
+              onClick={() => setAuthMode('login')}
+              style={{
+                background: authMode === 'login' ? 'var(--primary)' : 'transparent',
+                color: authMode === 'login' ? '#fff' : 'var(--ink)',
+                border: '1px solid var(--border)',
+                borderRadius: '8px',
+                padding: '0.4rem 0.9rem',
+                cursor: 'pointer',
+              }}
+            >
+              Log In
+            </button>
+            <button
+              type="button"
+              onClick={() => setAuthMode('signup')}
+              style={{
+                background: authMode === 'signup' ? 'var(--primary)' : 'transparent',
+                color: authMode === 'signup' ? '#fff' : 'var(--ink)',
+                border: '1px solid var(--border)',
+                borderRadius: '8px',
+                padding: '0.4rem 0.9rem',
+                cursor: 'pointer',
+              }}
+            >
+              Sign Up
+            </button>
+          </div>
+
+          {authMode === 'signup' && (
+            <div className="field">
+              <label>Name</label>
+              <input type="text" value={authName} onChange={(e) => setAuthName(e.target.value)} required />
+            </div>
+          )}
+          <div className="field">
+            <label>Email</label>
+            <input type="email" value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} required />
+          </div>
+          <div className="field">
+            <label>Password</label>
+            <input type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} required />
+          </div>
+          {authError && <p style={{ color: 'var(--danger)', fontSize: '0.85rem' }}>{authError}</p>}
+          <button type="submit">{authMode === 'signup' ? 'Create Account' : 'Log In'}</button>
+        </form>
+      ) : (
+        <div className="q-form" style={{ marginBottom: '1rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
+            <span style={{ fontWeight: 700 }}>Welcome, {user.name}!</span>
+            <button type="button" className="delete-btn" onClick={handleUserLogout}>Log out</button>
+          </div>
+          {quizResults.length > 0 && (
+            <div>
+              <p style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--ink-soft)', marginBottom: '0.5rem' }}>
+                Your Quiz History
+              </p>
+              {quizResults.slice(0, 5).map(r => {
+                const subj = subjects.find(s => s.id === r.subject_id);
+                return (
+                  <p key={r.id} style={{ fontSize: '0.85rem', margin: '0.2rem 0' }}>
+                    {subj ? subj.name : `Subject ${r.subject_id}`}: {r.score}/{r.total}
+                  </p>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       {!isAdmin ? (
         <form className="q-form" onSubmit={handleAdminLogin} style={{ marginBottom: '2rem' }}>
