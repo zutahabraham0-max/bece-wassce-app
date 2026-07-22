@@ -64,6 +64,12 @@ function App() {
   const [editingQuestionId, setEditingQuestionId] = useState(null);
   const [editQuestion, setEditQuestion] = useState({});
 
+  const [editingCareerId, setEditingCareerId] = useState(null);
+  const [editCareer, setEditCareer] = useState({});
+
+  const [editingMaterialId, setEditingMaterialId] = useState(null);
+  const [editMaterial, setEditMaterial] = useState({});
+
   // Search & filter state
   const [searchTerm, setSearchTerm] = useState('');
   const [filterYear, setFilterYear] = useState('All');
@@ -361,6 +367,48 @@ function App() {
       .then(res => res.json())
       .then(() => {
         setEditingQuestionId(null);
+        loadSubjectData(selectedSubject);
+      });
+  };
+
+  const startEditCareer = (c) => {
+    setEditingCareerId(c.id);
+    setEditCareer({ ...c });
+  };
+  const cancelEditCareer = () => {
+    setEditingCareerId(null);
+    setEditCareer({});
+  };
+  const saveEditCareer = () => {
+    fetch(`${API_URL}/careers/${editingCareerId}`, {
+      method: 'PUT',
+      headers: authHeaders,
+      body: JSON.stringify(editCareer),
+    })
+      .then(res => res.json())
+      .then(() => {
+        setEditingCareerId(null);
+        loadSubjectData(selectedSubject);
+      });
+  };
+
+  const startEditMaterial = (m) => {
+    setEditingMaterialId(m.id);
+    setEditMaterial({ ...m });
+  };
+  const cancelEditMaterial = () => {
+    setEditingMaterialId(null);
+    setEditMaterial({});
+  };
+  const saveEditMaterial = () => {
+    fetch(`${API_URL}/materials/${editingMaterialId}`, {
+      method: 'PUT',
+      headers: authHeaders,
+      body: JSON.stringify(editMaterial),
+    })
+      .then(res => res.json())
+      .then(() => {
+        setEditingMaterialId(null);
         loadSubjectData(selectedSubject);
       });
   };
@@ -806,11 +854,35 @@ function App() {
 
           {careers.map(c => (
             <div className="question-card" key={c.id}>
-              <p className="meta">{c.program}</p>
-              <p className="q-text"><strong>{c.career_title}</strong></p>
-              <p className="answer">{c.description}</p>
-              {isAdmin && (
-                <button className="delete-btn" onClick={() => handleDeleteCareer(c.id)}>Delete</button>
+              {editingCareerId === c.id ? (
+                <>
+                  <div className="field">
+                    <label>Program</label>
+                    <input type="text" value={editCareer.program || ''} onChange={(e) => setEditCareer({ ...editCareer, program: e.target.value })} />
+                  </div>
+                  <div className="field">
+                    <label>Career Title</label>
+                    <input type="text" value={editCareer.career_title || ''} onChange={(e) => setEditCareer({ ...editCareer, career_title: e.target.value })} />
+                  </div>
+                  <div className="field">
+                    <label>Description</label>
+                    <textarea value={editCareer.description || ''} onChange={(e) => setEditCareer({ ...editCareer, description: e.target.value })} />
+                  </div>
+                  <button onClick={saveEditCareer}>Save</button>
+                  <button className="delete-btn" onClick={cancelEditCareer} style={{ marginLeft: '0.5rem' }}>Cancel</button>
+                </>
+              ) : (
+                <>
+                  <p className="meta">{c.program}</p>
+                  <p className="q-text"><strong>{c.career_title}</strong></p>
+                  <p className="answer">{c.description}</p>
+                  {isAdmin && (
+                    <>
+                      <button onClick={() => startEditCareer(c)}>Edit</button>
+                      <button className="delete-btn" onClick={() => handleDeleteCareer(c.id)} style={{ marginLeft: '0.5rem' }}>Delete</button>
+                    </>
+                  )}
+                </>
               )}
             </div>
           ))}
@@ -846,10 +918,30 @@ function App() {
 
           {materials.map(m => (
             <div className="question-card" key={m.id}>
-              <p className="q-text"><strong>{m.title}</strong></p>
-              <p className="answer">{m.content}</p>
-              {isAdmin && (
-                <button className="delete-btn" onClick={() => handleDeleteMaterial(m.id)}>Delete</button>
+              {editingMaterialId === m.id ? (
+                <>
+                  <div className="field">
+                    <label>Title</label>
+                    <input type="text" value={editMaterial.title || ''} onChange={(e) => setEditMaterial({ ...editMaterial, title: e.target.value })} />
+                  </div>
+                  <div className="field">
+                    <label>Content / Notes</label>
+                    <textarea value={editMaterial.content || ''} onChange={(e) => setEditMaterial({ ...editMaterial, content: e.target.value })} />
+                  </div>
+                  <button onClick={saveEditMaterial}>Save</button>
+                  <button className="delete-btn" onClick={cancelEditMaterial} style={{ marginLeft: '0.5rem' }}>Cancel</button>
+                </>
+              ) : (
+                <>
+                  <p className="q-text"><strong>{m.title}</strong></p>
+                  <p className="answer">{m.content}</p>
+                  {isAdmin && (
+                    <>
+                      <button onClick={() => startEditMaterial(m)}>Edit</button>
+                      <button className="delete-btn" onClick={() => handleDeleteMaterial(m.id)} style={{ marginLeft: '0.5rem' }}>Delete</button>
+                    </>
+                  )}
+                </>
               )}
             </div>
           ))}
