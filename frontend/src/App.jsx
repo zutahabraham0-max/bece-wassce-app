@@ -60,6 +60,8 @@ function App() {
   const [quizScore, setQuizScore] = useState(0);
   const [quizFinished, setQuizFinished] = useState(false);
   const [quizAnswers, setQuizAnswers] = useState({});
+  const [quizTimeLeft, setQuizTimeLeft] = useState(600); // 10 minutes in seconds
+  const [quizDurationMinutes, setQuizDurationMinutes] = useState(10);
 
   // Edit state
   const [editingQuestionId, setEditingQuestionId] = useState(null);
@@ -96,6 +98,19 @@ function App() {
     }
   }, []);
 
+  useEffect(() => {
+    if (!quizMode || quizFinished) return;
+
+    if (quizTimeLeft <= 0) {
+      const quizQuestions = questions.filter(q => q.option_a);
+      finishQuiz(quizAnswers, quizQuestions);
+      return;
+    }
+
+    const timer = setTimeout(() => setQuizTimeLeft(prev => prev - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [quizMode, quizFinished, quizTimeLeft]);
+
   const fetchQuizResults = (token) => {
     fetch(`${API_URL}/quiz-results`, {
       headers: { 'Authorization': `Bearer ${token}` },
@@ -126,6 +141,7 @@ function App() {
     setQuizScore(0);
     setQuizFinished(false);
     setQuizAnswers({});
+    setQuizTimeLeft(quizDurationMinutes * 60);
   };
 
   const exitQuiz = () => {
@@ -138,20 +154,24 @@ function App() {
     setQuizAnswers(prev => ({ ...prev, [quizIndex]: option }));
   };
 
-  const nextQuizQuestion = () => {
+  const finishQuiz = (finalAnswers, quizQuestions) => {
+    let correctCount = 0;
+    quizQuestions.forEach((q, i) => {
+      if (finalAnswers[i] === q.correct_option) correctCount++;
+    });
+    setQuizScore(correctCount);
+    setQuizFinished(true);
+    saveQuizProgress(selectedSubject, correctCount, quizQuestions.length);
+  };
+
+ const nextQuizQuestion = () => {
     const quizQuestions = questions.filter(q => q.option_a);
     if (quizIndex + 1 < quizQuestions.length) {
       setQuizIndex(prev => prev + 1);
       setQuizSelected(null);
     } else {
       const finalAnswers = { ...quizAnswers, [quizIndex]: quizSelected };
-      let correctCount = 0;
-      quizQuestions.forEach((q, i) => {
-        if (finalAnswers[i] === q.correct_option) correctCount++;
-      });
-      setQuizScore(correctCount);
-      setQuizFinished(true);
-      saveQuizProgress(selectedSubject, correctCount, quizQuestions.length);
+      finishQuiz(finalAnswers, quizQuestions);
     }
   };
 
@@ -662,9 +682,21 @@ const startEditSubject = (s) => {
         <><h2 className="section-title">
             Questions {activeSubject ? `— ${activeSubject.name}` : ''}
           </h2>
-
-          {!quizMode && questions.some(q => q.option_a) && (
+{!quizMode && questions.some(q => q.option_a) && (
             <>
+              <div className="q-form" style={{ marginBottom: '0.6rem', display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                <label style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--ink-soft)' }}>
+                  Time limit (minutes):
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="180"
+                  value={quizDurationMinutes}
+                  onChange={(e) => setQuizDurationMinutes(Number(e.target.value))}
+                  style={{ width: '80px', padding: '0.4rem', borderRadius: '8px', border: '1px solid var(--border)' }}
+                />
+              </div>
               <button
                 className="q-form"
                 style={{
@@ -701,7 +733,10 @@ const startEditSubject = (s) => {
                     if (!current) return <p>No quiz questions available.</p>;
                     return (
                       <>
-                        <p className="meta">Question {quizIndex + 1} of {quizQuestions.length}</p>
+                        <p className="meta">
+                          Question {quizIndex + 1} of {quizQuestions.length}
+                          {' '}&middot; Time left: {String(Math.floor(quizTimeLeft / 60)).padStart(2, '0')}:{String(quizTimeLeft % 60).padStart(2, '0')}
+                        </p>
                         <p className="q-text" style={{ fontWeight: 700 }}>{current.question_text}</p>
 
                         {['A', 'B', 'C', 'D'].map(opt => {
