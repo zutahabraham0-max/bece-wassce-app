@@ -851,14 +851,15 @@ const startEditSubject = (s) => {
               <h2 className="section-title">Add a New Question</h2>
               <form className="q-form" onSubmit={handleAddQuestion}>
                 <div className="field">
-                  <label>Year</label>
-                  <input type="number" value={year} onChange={(e) => setYear(e.target.value)} required />
+                  <label>Year (leave as-is for Practice Questions)</label>
+                  <input type="number" value={year} onChange={(e) => setYear(e.target.value)} />
                 </div>
                 <div className="field">
                   <label>Exam Type</label>
                   <select value={examType} onChange={(e) => setExamType(e.target.value)}>
                     <option value="BECE">BECE</option>
                     <option value="WASSCE">WASSCE</option>
+                    <option value="Practice">Practice Question</option>
                   </select>
                 </div>
                 <div className="field">
