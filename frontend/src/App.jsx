@@ -99,12 +99,32 @@ function App() {
   };
 
   const nextQuizQuestion = () => {
-    if (quizIndex + 1 < questions.length) {
+    const quizQuestions = questions.filter(q => q.option_a);
+    if (quizIndex + 1 < quizQuestions.length) {
       setQuizIndex(prev => prev + 1);
       setQuizSelected(null);
     } else {
       setQuizFinished(true);
+      saveQuizProgress(selectedSubject, quizScore + (quizSelected === quizQuestions[quizIndex].correct_option ? 1 : 0), quizQuestions.length);
     }
+  };
+
+  const saveQuizProgress = (subjectId, score, total) => {
+    const stored = JSON.parse(localStorage.getItem('quizProgress') || '{}');
+    const existing = stored[subjectId] || { attempts: 0, bestScore: 0, bestTotal: total };
+    stored[subjectId] = {
+      attempts: existing.attempts + 1,
+      lastScore: score,
+      lastTotal: total,
+      bestScore: Math.max(existing.bestScore, score),
+      bestTotal: total,
+    };
+    localStorage.setItem('quizProgress', JSON.stringify(stored));
+  };
+
+  const getQuizProgress = (subjectId) => {
+    const stored = JSON.parse(localStorage.getItem('quizProgress') || '{}');
+    return stored[subjectId] || null;
   };
 
   const verifyAdminKey = (key, silent) => {
@@ -332,23 +352,31 @@ function App() {
           </h2>
 
           {!quizMode && questions.some(q => q.option_a) && (
-            <button
-              className="q-form"
-              style={{
-                display: 'block',
-                width: '100%',
-                marginBottom: '1.5rem',
-                cursor: 'pointer',
-                fontWeight: 700,
-                color: 'var(--ink)',
-                background: 'var(--card)',
-                textAlign: 'left',
-                border: '1px solid var(--border)',
-              }}
-              onClick={startQuiz}
-            >
-              Take Quiz ({questions.filter(q => q.option_a).length} questions)
-            </button>
+            <>
+              <button
+                className="q-form"
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  marginBottom: '0.6rem',
+                  cursor: 'pointer',
+                  fontWeight: 700,
+                  color: 'var(--ink)',
+                  background: 'var(--card)',
+                  textAlign: 'left',
+                  border: '1px solid var(--border)',
+                }}
+                onClick={startQuiz}
+              >
+                Take Quiz ({questions.filter(q => q.option_a).length} questions)
+              </button>
+              {getQuizProgress(selectedSubject) && (
+                <p className="empty-note" style={{ marginBottom: '1.5rem' }}>
+                  Best score: {getQuizProgress(selectedSubject).bestScore} / {getQuizProgress(selectedSubject).bestTotal}
+                  {' '}&middot; Attempts: {getQuizProgress(selectedSubject).attempts}
+                </p>
+              )}
+            </>
           )}
 
           {quizMode && (
