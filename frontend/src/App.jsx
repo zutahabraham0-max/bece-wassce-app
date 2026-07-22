@@ -28,6 +28,8 @@ function App() {
 
   const [quizResults, setQuizResults] = useState([]);
 
+  const [showPassword, setShowPassword] = useState(false);
+
   // Question form state
   const [year, setYear] = useState('');
   const [examType, setExamType] = useState('BECE');
@@ -411,9 +413,32 @@ function App() {
             <label>Email</label>
             <input type="email" value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} required />
           </div>
-          <div className="field">
+         <div className="field">
             <label>Password</label>
-            <input type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} required />
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={authPassword}
+                onChange={(e) => setAuthPassword(e.target.value)}
+                required
+                style={{ flex: 1 }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  background: 'transparent',
+                  border: '1px solid var(--border)',
+                  borderRadius: '10px',
+                  padding: '0 0.8rem',
+                  cursor: 'pointer',
+                  fontSize: '0.8rem',
+                  color: 'var(--ink-soft)',
+                }}
+              >
+                {showPassword ? 'Hide' : 'Show'}
+              </button>
+            </div>
           </div>
           {authError && <p style={{ color: 'var(--danger)', fontSize: '0.85rem' }}>{authError}</p>}
           <button type="submit">{authMode === 'signup' ? 'Create Account' : 'Log In'}</button>
