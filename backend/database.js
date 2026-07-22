@@ -54,6 +54,27 @@ async function setupTables() {
     );
   `);
 
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      email TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW()
+    );
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS quiz_results (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id),
+      subject_id INTEGER REFERENCES subjects(id),
+      score INTEGER,
+      total INTEGER,
+      taken_at TIMESTAMP DEFAULT NOW()
+    );
+  `);
+
   console.log('Database and tables created successfully!');
 }
 

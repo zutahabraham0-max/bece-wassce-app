@@ -1,6 +1,9 @@
 const express = require('express');
 const cors = require('cors');
 const { pool, setupTables } = require('./database');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -21,6 +24,71 @@ app.get('/', (req, res) => {
 });
 app.post('/admin/verify', requireAdmin, (req, res) => {
   res.json({ success: true });
+});
+
+// ---------- USER AUTH ----------
+
+app.post('/auth/signup', async (req, res) => {
+  const { name, email, password } = req.body;
+  try {
+    const hash = await bcrypt.hash(password, 10);
+    const result = await pool.query(
+      'INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id, name, email',
+      [name, email, hash]
+    );
+    const user = result.rows[0];
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '30d' });
+    res.json({ user, token });
+  } catch (err) {
+    if (err.code === '23505') {
+      res.status(400).json({ error: 'An account with this email already exists.' });
+    } else {
+      res.status(500).json({ error: 'Signup failed.' });
+    }
+  }
+});
+
+app.post('/auth/login', async (req, res) => {
+  const { email, password } = req.body;
+  const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+  const user = result.rows[0];
+  if (!user) {
+    return res.status(401).json({ error: 'Invalid email or password.' });
+  }
+  const match = await bcrypt.compare(password, user.password_hash);
+  if (!match) {
+    return res.status(401).json({ error: 'Invalid email or password.' });
+  }
+  const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '30d' });
+  res.json({ user: { id: user.id, name: user.name, email: user.email }, token });
+});
+
+function requireUser(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'Not logged in.' });
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (err) return res.status(401).json({ error: 'Invalid or expired session.' });
+    req.userId = decoded.userId;
+    next();
+  });
+}
+
+app.post('/quiz-results', requireUser, async (req, res) => {
+  const { subject_id, score, total } = req.body;
+  const result = await pool.query(
+    'INSERT INTO quiz_results (user_id, subject_id, score, total) VALUES ($1, $2, $3, $4) RETURNING *',
+    [req.userId, subject_id, score, total]
+  );
+  res.json(result.rows[0]);
+});
+
+app.get('/quiz-results', requireUser, async (req, res) => {
+  const result = await pool.query(
+    'SELECT * FROM quiz_results WHERE user_id = $1 ORDER BY taken_at DESC',
+    [req.userId]
+  );
+  res.json(result.rows);
 });
 
 // ---------- SUBJECTS ----------
