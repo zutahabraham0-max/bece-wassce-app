@@ -332,7 +332,21 @@ function App() {
           </h2>
 
           {!quizMode && questions.some(q => q.option_a) && (
-            <button className="q-form" style={{ display: 'block', marginBottom: '1.5rem', cursor: 'pointer', fontWeight: 700 }} onClick={startQuiz}>
+            <button
+              className="q-form"
+              style={{
+                display: 'block',
+                width: '100%',
+                marginBottom: '1.5rem',
+                cursor: 'pointer',
+                fontWeight: 700,
+                color: 'var(--ink)',
+                background: 'var(--card)',
+                textAlign: 'left',
+                border: '1px solid var(--border)',
+              }}
+              onClick={startQuiz}
+            >
               Take Quiz ({questions.filter(q => q.option_a).length} questions)
             </button>
           )}
