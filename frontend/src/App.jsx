@@ -59,6 +59,7 @@ function App() {
   const [quizSelected, setQuizSelected] = useState(null);
   const [quizScore, setQuizScore] = useState(0);
   const [quizFinished, setQuizFinished] = useState(false);
+  const [quizAnswers, setQuizAnswers] = useState({});
 
   // Edit state
   const [editingQuestionId, setEditingQuestionId] = useState(null);
@@ -124,6 +125,7 @@ function App() {
     setQuizSelected(null);
     setQuizScore(0);
     setQuizFinished(false);
+    setQuizAnswers({});
   };
 
   const exitQuiz = () => {
@@ -131,12 +133,9 @@ function App() {
   };
 
   const selectQuizAnswer = (option) => {
-    if (quizSelected) return; // already answered this question
+    if (quizSelected) return;
     setQuizSelected(option);
-    const current = questions[quizIndex];
-    if (option === current.correct_option) {
-      setQuizScore(prev => prev + 1);
-    }
+    setQuizAnswers(prev => ({ ...prev, [quizIndex]: option }));
   };
 
   const nextQuizQuestion = () => {
@@ -145,8 +144,14 @@ function App() {
       setQuizIndex(prev => prev + 1);
       setQuizSelected(null);
     } else {
+      const finalAnswers = { ...quizAnswers, [quizIndex]: quizSelected };
+      let correctCount = 0;
+      quizQuestions.forEach((q, i) => {
+        if (finalAnswers[i] === q.correct_option) correctCount++;
+      });
+      setQuizScore(correctCount);
       setQuizFinished(true);
-      saveQuizProgress(selectedSubject, quizScore + (quizSelected === quizQuestions[quizIndex].correct_option ? 1 : 0), quizQuestions.length);
+      saveQuizProgress(selectedSubject, correctCount, quizQuestions.length);
     }
   };
 
