@@ -1,8 +1,11 @@
 const express = require('express');
 const cors = require('cors');
+const { Resend } = require('resend');
+const crypto = require('crypto');
 const { pool, setupTables } = require('./database');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 
 const app = express();
@@ -73,6 +76,61 @@ function requireUser(req, res, next) {
     next();
   });
 }
+
+app.post('/auth/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+  const user = result.rows[0];
+
+  if (!user) {
+    // Don't reveal whether the email exists, for security
+    return res.json({ message: 'If that email exists, a reset link has been sent.' });
+  }
+
+  const token = crypto.randomBytes(32).toString('hex');
+  const expires = new Date(Date.now() + 3600000); // 1 hour from now
+
+  await pool.query(
+    'UPDATE users SET reset_token = $1, reset_token_expires = $2 WHERE id = $3',
+    [token, expires, user.id]
+  );
+
+  const resetLink = `https://rad-dusk-3cc172.netlify.app/reset-password?token=${token}`;
+
+  try {
+    await resend.emails.send({
+      from: 'onboarding@resend.dev',
+      to: email,
+      subject: 'Reset your password - BECE/WASSCE App',
+      html: `<p>Hi ${user.name},</p><p>Click the link below to reset your password. This link expires in 1 hour.</p><p><a href="${resetLink}">${resetLink}</a></p>`,
+    });
+  } catch (err) {
+    console.error('Email send failed:', err);
+  }
+
+  res.json({ message: 'If that email exists, a reset link has been sent.' });
+});
+
+app.post('/auth/reset-password', async (req, res) => {
+  const { token, newPassword } = req.body;
+  const result = await pool.query(
+    'SELECT * FROM users WHERE reset_token = $1 AND reset_token_expires > NOW()',
+    [token]
+  );
+  const user = result.rows[0];
+
+  if (!user) {
+    return res.status(400).json({ error: 'Invalid or expired reset link.' });
+  }
+
+  const hash = await bcrypt.hash(newPassword, 10);
+  await pool.query(
+    'UPDATE users SET password_hash = $1, reset_token = NULL, reset_token_expires = NULL WHERE id = $2',
+    [hash, user.id]
+  );
+
+  res.json({ message: 'Password reset successfully.' });
+});
 
 app.post('/quiz-results', requireUser, async (req, res) => {
   const { subject_id, score, total } = req.body;
