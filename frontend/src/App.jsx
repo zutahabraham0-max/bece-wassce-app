@@ -25,6 +25,9 @@ function App() {
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
   const [authError, setAuthError] = useState('');
+  const [forgotMode, setForgotMode] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotMessage, setForgotMessage] = useState('');
 
   const [quizResults, setQuizResults] = useState([]);
 
@@ -80,6 +83,11 @@ function App() {
   const [filterYear, setFilterYear] = useState('All');
 
   useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tokenFromUrl = urlParams.get('token');
+    if (tokenFromUrl && window.location.pathname === '/reset-password') {
+      setResetToken(tokenFromUrl);
+    }
     fetch(`${API_URL}/subjects`)
       .then(res => res.json())
       .then(data => setSubjects(data));
@@ -269,6 +277,39 @@ function App() {
       })
       .catch((err) => setAuthError(err.message));
   };
+
+  const handleForgotPassword = (e) => {
+    e.preventDefault();
+    fetch(`${API_URL}/auth/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: forgotEmail }),
+    })
+      .then(res => res.json())
+      .then((data) => setForgotMessage(data.message));
+  };
+  const handleResetPassword = (e) => {
+    e.preventDefault();
+    fetch(`${API_URL}/auth/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: resetToken, newPassword }),
+    })
+      .then(res => res.json())
+      .then((data) => {
+        if (data.error) {
+          setResetMessage(data.error);
+        } else {
+          setResetMessage('Password reset! You can now log in with your new password.');
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 3000);
+        }
+      });
+  };
+  const [resetToken, setResetToken] = useState(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [resetMessage, setResetMessage] = useState('');
 
   const handleUserLogout = () => {
     setUser(null);
@@ -485,6 +526,31 @@ const startEditSubject = (s) => {
     return matchesSearch && matchesYear;
   });
 
+  if (resetToken) {
+    return (
+      <div className="app">
+        <header className="masthead">
+          <p className="eyebrow">Ghana &middot; JHS &amp; SHS</p>
+          <h1>Reset Your Password</h1>
+        </header>
+        <form className="q-form" onSubmit={handleResetPassword}>
+          <div className="field">
+            <label>New Password</label>
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              required
+              minLength={6}
+            />
+          </div>
+          {resetMessage && <p style={{ color: 'var(--success)', fontSize: '0.9rem' }}>{resetMessage}</p>}
+          <button type="submit">Reset Password</button>
+        </form>
+      </div>
+    );
+  }
+
   return (
     <div className="app">
       <header className="masthead">
@@ -495,6 +561,18 @@ const startEditSubject = (s) => {
 
       {!user ? (
         <form className="q-form" onSubmit={handleAuthSubmit} style={{ marginBottom: '1rem' }}>
+        {forgotMode && !user && (
+        <form className="q-form" onSubmit={handleForgotPassword} style={{ marginBottom: '1rem' }}>
+          <p style={{ fontWeight: 700, marginBottom: '0.8rem' }}>Reset your password</p>
+          <div className="field">
+            <label>Email</label>
+            <input type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} required />
+          </div>
+          {forgotMessage && <p style={{ fontSize: '0.85rem', color: 'var(--success)' }}>{forgotMessage}</p>}
+          <button type="submit">Send Reset Link</button>
+          <button type="button" className="delete-btn" style={{ marginLeft: '0.5rem' }} onClick={() => { setForgotMode(false); setForgotMessage(''); }}>Cancel</button>
+        </form>
+      )}
           <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
             <button
               type="button"
@@ -563,6 +641,17 @@ const startEditSubject = (s) => {
               </button>
             </div>
           </div>
+          {authMode === 'login' && (
+            <p style={{ fontSize: '0.8rem', marginBottom: '1rem' }}>
+              <button
+                type="button"
+                onClick={() => setForgotMode(true)}
+                style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+              >
+                Forgot password?
+              </button>
+            </p>
+          )}
           {authError && <p style={{ color: 'var(--danger)', fontSize: '0.85rem' }}>{authError}</p>}
           <button type="submit">{authMode === 'signup' ? 'Create Account' : 'Log In'}</button>
         </form>
