@@ -346,3 +346,20 @@ h2.section-title {
   padding: 0;
   margin-bottom: 1.2rem;
 }
+.page-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--bg);
+  padding: 1rem 0;
+  margin: -1rem 0 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.page-header .back-btn {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+}

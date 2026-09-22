@@ -536,7 +536,9 @@ function App() {
     <div className="app">
       <MenuToggle />
       {menuOpen && <Menu />}
-      <button className="back-btn" onClick={() => goTo('home')}>← Back to Home</button>
+            <div className="page-header">
+        <button className="back-btn" onClick={() => goTo('home')}>← Back to Home</button>
+      </div>
       <h2 className="section-title">{title}</h2>
       <ul className="subject-grid">
         {subjects.map(subject => (
@@ -561,7 +563,9 @@ function App() {
       <div className="app">
         <MenuToggle />
         {menuOpen && <Menu />}
-        <button className="back-btn" onClick={() => goTo('home')}>← Back to Home</button>
+                <div className="page-header">
+          <button className="back-btn" onClick={() => goTo('home')}>← Back to Home</button>
+        </div>
         <h2 className="section-title">Career Paths by Programme</h2>
         {Object.keys(careersByProgram).length === 0 && <p className="empty-note">No careers added yet.</p>}
         {Object.entries(careersByProgram).map(([prog, careerList]) => (
@@ -597,7 +601,9 @@ function App() {
       <div className="app">
         <MenuToggle />
         {menuOpen && <Menu />}
-        <button className="back-btn" onClick={() => goTo('home')}>← Back to Home</button>
+                <div className="page-header">
+          <button className="back-btn" onClick={() => goTo('home')}>← Back to Home</button>
+        </div>
 
         {!user ? (
           <form className="q-form" onSubmit={handleAuthSubmit} style={{ marginBottom: '1rem' }}>
@@ -735,7 +741,9 @@ function App() {
       <div className="app">
         <MenuToggle />
         {menuOpen && <Menu />}
-        <button className="back-btn" onClick={() => goTo(isPastView ? 'pastSubjects' : 'practiceSubjects')}>← Choose a different subject</button>
+                <div className="page-header">
+          <button className="back-btn" onClick={() => goTo(isPastView ? 'pastSubjects' : 'practiceSubjects')}>← Choose a different subject</button>
+        </div>
         <h2 className="section-title">
           {isPastView ? 'Past Questions' : 'Practice Questions'} {activeSubject ? `— ${activeSubject.name}` : ''}
         </h2>
@@ -896,7 +904,9 @@ function App() {
       <div className="app">
         <MenuToggle />
         {menuOpen && <Menu />}
-        <button className="back-btn" onClick={() => goTo('materialsSubjects')}>← Choose a different subject</button>
+                <div className="page-header">
+          <button className="back-btn" onClick={() => goTo('materialsSubjects')}>← Choose a different subject</button>
+        </div>
         <h2 className="section-title">Learning Materials {activeSubject ? `— ${activeSubject.name}` : ''}</h2>
 
         {materials.length === 0 && <p className="empty-note">No learning materials yet for this subject.</p>}
