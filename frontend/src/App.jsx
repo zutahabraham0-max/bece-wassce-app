@@ -82,6 +82,9 @@ function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterYear, setFilterYear] = useState('All');
 
+    const [allCareers, setAllCareers] = useState([]);
+  const [showCareersPage, setShowCareersPage] = useState(false);
+
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const tokenFromUrl = urlParams.get('token');
@@ -91,6 +94,10 @@ function App() {
     fetch(`${API_URL}/subjects`)
       .then(res => res.json())
       .then(data => setSubjects(data));
+
+          fetch(`${API_URL}/careers`)
+      .then(res => res.json())
+      .then(data => setAllCareers(data));
 
     const savedKey = sessionStorage.getItem('adminKey');
     if (savedKey) {
@@ -518,6 +525,13 @@ const startEditSubject = (s) => {
 
   const activeSubject = subjects.find(s => s.id === selectedSubject);
 
+    const careersByProgram = allCareers.reduce((acc, c) => {
+    const program = c.program || 'Other';
+    if (!acc[program]) acc[program] = [];
+    acc[program].push(c);
+    return acc;
+  }, {});
+
   const availableYears = ['All', ...new Set(questions.map(q => q.year))].sort();
 
   const filteredQuestions = questions.filter(q => {
@@ -557,7 +571,19 @@ const startEditSubject = (s) => {
         <p className="eyebrow">Ghana &middot; JHS &amp; SHS</p>
         <h1>BECE / WASSCE Past Questions</h1>
         <p>A running record of past questions, worked answers, study notes, and career paths.</p>
-      </header>
+            </header>
+
+      <button
+        className="q-form"
+        style={{
+          display: 'block', width: '100%', marginBottom: '1.5rem', cursor: 'pointer',
+          fontWeight: 700, color: 'var(--ink)', background: 'var(--card)',
+          textAlign: 'left', border: '1px solid var(--border)',
+        }}
+        onClick={() => setShowCareersPage(!showCareersPage)}
+      >
+        {showCareersPage ? '← Back to Subjects' : 'Explore Career Paths →'}
+      </button>
 
       {!user ? (
         <form className="q-form" onSubmit={handleAuthSubmit} style={{ marginBottom: '1rem' }}>
@@ -699,6 +725,41 @@ const startEditSubject = (s) => {
           <button type="button" className="delete-btn" onClick={handleAdminLogout}>Log out</button>
         </div>
       )}
+
+            {showCareersPage ? (
+        <div>
+          <h2 className="section-title">Career Paths by Programme</h2>
+          {Object.keys(careersByProgram).length === 0 && (
+            <p className="empty-note">No careers added yet.</p>
+          )}
+          {Object.entries(careersByProgram).map(([program, careers]) => (
+            <div key={program} style={{ marginBottom: '2rem' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.6rem', color: 'var(--primary)' }}>
+                {program}
+              </h3>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '10px' }}>
+                  <thead>
+                    <tr style={{ background: 'var(--primary-soft)' }}>
+                      <th style={{ textAlign: 'left', padding: '0.7rem', fontSize: '0.8rem', color: 'var(--ink)' }}>Career</th>
+                      <th style={{ textAlign: 'left', padding: '0.7rem', fontSize: '0.8rem', color: 'var(--ink)' }}>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {careers.map(c => (
+                      <tr key={c.id} style={{ borderTop: '1px solid var(--border)' }}>
+                        <td style={{ padding: '0.7rem', fontWeight: 700, fontSize: '0.88rem', verticalAlign: 'top' }}>{c.career_title}</td>
+                        <td style={{ padding: '0.7rem', fontSize: '0.85rem', color: 'var(--ink-soft)' }}>{c.description}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+      <>
 
       <h2 className="section-title">Subjects</h2>
       <ul className="subject-grid">
@@ -1147,7 +1208,9 @@ const startEditSubject = (s) => {
               </form>
             </>
           )}
-        </>
+               </>
+      )}
+      </>
       )}
     </div>
   );
