@@ -363,3 +363,65 @@ h2.section-title {
   gap: 0.3rem;
   font-size: 0.9rem;
 }
+
+:root {
+  --gold: #f0b429;
+}
+
+.hero-illustration {
+  width: 180px;
+  height: 130px;
+  margin-bottom: 1.5rem;
+  opacity: 0;
+  animation: hero-reveal 0.9s ease-out 0.15s forwards;
+}
+
+@keyframes hero-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-illustration {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  min-height: 100vh;
+}
+
+.hero-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+
+.hero-video-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(245, 247, 251, 0.75);
+  z-index: 1;
+}
+
+.hero-illustration,
+.hero .eyebrow,
+.hero h1,
+.hero p {
+  position: relative;
+  z-index: 2;
+}

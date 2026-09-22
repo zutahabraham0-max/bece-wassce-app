@@ -522,7 +522,35 @@ function App() {
       <div className="app">
         <MenuToggle />
         {menuOpen && <Menu />}
-        <div className="hero">
+               <div className="hero">
+                         <video className="hero-video" autoPlay loop muted playsInline>
+            <source src="/hero-video.mp4" type="video/mp4" />
+          </video>
+          <div className="hero-video-overlay"></div>
+          <svg className="hero-illustration" viewBox="0 0 240 170" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {/* Light rays rising from the book */}
+            <line x1="120" y1="70" x2="70" y2="10" stroke="var(--gold)" strokeWidth="3" strokeLinecap="round" />
+            <line x1="120" y1="70" x2="120" y2="4" stroke="var(--gold)" strokeWidth="3" strokeLinecap="round" />
+            <line x1="120" y1="70" x2="170" y2="10" stroke="var(--gold)" strokeWidth="3" strokeLinecap="round" />
+            <line x1="120" y1="70" x2="45" y2="35" stroke="var(--gold)" strokeWidth="2.5" strokeLinecap="round" opacity="0.7" />
+            <line x1="120" y1="70" x2="195" y2="35" stroke="var(--gold)" strokeWidth="2.5" strokeLinecap="round" opacity="0.7" />
+
+            {/* Sparkles */}
+            <path d="M40 55 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3 z" fill="var(--gold)" />
+            <path d="M200 60 l2.5 6.5 6.5 2.5 -6.5 2.5 -2.5 6.5 -2.5 -6.5 -6.5 -2.5 6.5 -2.5 z" fill="var(--gold)" />
+            <path d="M175 15 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2 z" fill="var(--gold)" opacity="0.85" />
+
+            {/* Open book */}
+            <path d="M120 78 L34 96 V150 L120 134 Z" fill="var(--primary)" />
+            <path d="M120 78 L206 96 V150 L120 134 Z" fill="var(--primary-soft)" stroke="var(--primary)" strokeWidth="1.5" />
+            <line x1="46" y1="106" x2="104" y2="99" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" opacity="0.6" />
+            <line x1="46" y1="118" x2="104" y2="111" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" opacity="0.6" />
+            <line x1="46" y1="130" x2="104" y2="123" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" opacity="0.6" />
+            <line x1="136" y1="99" x2="192" y2="106" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" opacity="0.4" />
+            <line x1="136" y1="111" x2="192" y2="118" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" opacity="0.4" />
+            <line x1="136" y1="123" x2="192" y2="130" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" opacity="0.4" />
+            <path d="M120 78 V134" stroke="var(--ink)" strokeWidth="2" opacity="0.15" />
+          </svg>
           <p className="eyebrow">Ghana &middot; JHS &amp; SHS</p>
           <h1>BECE / WASSCE Past Questions</h1>
           <p>Tap the menu to explore past questions, practice quizzes, learning materials, and career paths.</p>
