@@ -605,13 +605,24 @@ function App() {
                   <tr style={{ background: 'var(--primary-soft)' }}>
                     <th style={{ textAlign: 'left', padding: '0.7rem', fontSize: '0.8rem' }}>Career</th>
                     <th style={{ textAlign: 'left', padding: '0.7rem', fontSize: '0.8rem' }}>Description</th>
+                    <th style={{ textAlign: 'left', padding: '0.7rem', fontSize: '0.8rem' }}>Resources</th>
                   </tr>
                 </thead>
-                <tbody>
+                               <tbody>
                   {careerList.map(c => (
                     <tr key={c.id} style={{ borderTop: '1px solid var(--border)' }}>
                       <td style={{ padding: '0.7rem', fontWeight: 700, fontSize: '0.88rem', verticalAlign: 'top' }}>{c.career_title}</td>
                       <td style={{ padding: '0.7rem', fontSize: '0.85rem', color: 'var(--ink-soft)' }}>{c.description}</td>
+                      <td style={{ padding: '0.7rem', verticalAlign: 'top' }}>
+                        <a
+                          href={`https://www.google.com/search?q=${encodeURIComponent(c.career_title + ' career guide Ghana')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ color: 'var(--primary)', fontSize: '0.8rem', fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}
+                        >
+                          Learn more →
+                        </a>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
