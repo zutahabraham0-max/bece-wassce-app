@@ -299,6 +299,44 @@ app.delete('/materials/:id',requireAdmin, async (req, res) => {
   res.json({ message: `Material ${id} deleted` });
 });
 
+// ---------- SCHOLARSHIPS ----------
+
+app.get('/scholarships', async (req, res) => {
+  const { level } = req.query;
+  let result;
+  if (level) {
+    result = await pool.query('SELECT * FROM scholarships WHERE level = $1 ORDER BY id', [level]);
+  } else {
+    result = await pool.query('SELECT * FROM scholarships ORDER BY id');
+  }
+  res.json(result.rows);
+});
+
+app.post('/scholarships', requireAdmin, async (req, res) => {
+  const { level, title, description, eligibility, link } = req.body;
+  const result = await pool.query(
+    'INSERT INTO scholarships (level, title, description, eligibility, link) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+    [level, title, description, eligibility, link]
+  );
+  res.json(result.rows[0]);
+});
+
+app.put('/scholarships/:id', requireAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { level, title, description, eligibility, link } = req.body;
+  const result = await pool.query(
+    'UPDATE scholarships SET level=$1, title=$2, description=$3, eligibility=$4, link=$5 WHERE id=$6 RETURNING *',
+    [level, title, description, eligibility, link, id]
+  );
+  res.json(result.rows[0]);
+});
+
+app.delete('/scholarships/:id', requireAdmin, async (req, res) => {
+  const { id } = req.params;
+  await pool.query('DELETE FROM scholarships WHERE id = $1', [id]);
+  res.json({ message: `Scholarship ${id} deleted` });
+});
+
 // ---------- START SERVER ----------
 
 setupTables()

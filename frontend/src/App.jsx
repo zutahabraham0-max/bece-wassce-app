@@ -14,6 +14,7 @@ function App() {
   const [careers, setCareers] = useState([]);
   const [materials, setMaterials] = useState([]);
   const [allCareers, setAllCareers] = useState([]);
+    const [scholarships, setScholarships] = useState([]);
 
   // Admin state
   const [isAdmin, setIsAdmin] = useState(false);
@@ -56,6 +57,15 @@ function App() {
   const [program, setProgram] = useState('');
   const [careerTitle, setCareerTitle] = useState('');
   const [careerDescription, setCareerDescription] = useState('');
+
+    // Scholarship form state
+  const [scholarshipLevel, setScholarshipLevel] = useState('SHS');
+  const [scholarshipTitle, setScholarshipTitle] = useState('');
+  const [scholarshipDescription, setScholarshipDescription] = useState('');
+  const [scholarshipEligibility, setScholarshipEligibility] = useState('');
+  const [scholarshipLink, setScholarshipLink] = useState('');
+  const [editingScholarshipId, setEditingScholarshipId] = useState(null);
+  const [editScholarship, setEditScholarship] = useState({});
 
   // Material form state
   const [materialTitle, setMaterialTitle] = useState('');
@@ -103,6 +113,10 @@ function App() {
     fetch(`${API_URL}/careers`)
       .then(res => res.json())
       .then(data => setAllCareers(data));
+
+          fetch(`${API_URL}/scholarships`)
+      .then(res => res.json())
+      .then(data => setScholarships(data));
 
     const savedKey = sessionStorage.getItem('adminKey');
     if (savedKey) verifyAdminKey(savedKey, true);
@@ -451,6 +465,51 @@ function App() {
     }
   };
 
+    const handleAddScholarship = (e) => {
+    e.preventDefault();
+    fetch(`${API_URL}/scholarships`, {
+      method: 'POST',
+      headers: authHeaders,
+      body: JSON.stringify({
+        level: scholarshipLevel,
+        title: scholarshipTitle,
+        description: scholarshipDescription,
+        eligibility: scholarshipEligibility,
+        link: scholarshipLink,
+      }),
+    })
+      .then(res => res.json())
+      .then((newScholarship) => {
+        setScholarships(prev => [...prev, newScholarship]);
+        setScholarshipTitle('');
+        setScholarshipDescription('');
+        setScholarshipEligibility('');
+        setScholarshipLink('');
+      });
+  };
+
+  const handleDeleteScholarship = (id) => {
+    if (window.confirm('Delete this scholarship? This cannot be undone.')) {
+      fetch(`${API_URL}/scholarships/${id}`, { method: 'DELETE', headers: authHeaders })
+        .then(() => setScholarships(prev => prev.filter(s => s.id !== id)));
+    }
+  };
+
+  const startEditScholarship = (s) => { setEditingScholarshipId(s.id); setEditScholarship({ ...s }); };
+  const cancelEditScholarship = () => { setEditingScholarshipId(null); setEditScholarship({}); };
+  const saveEditScholarship = () => {
+    fetch(`${API_URL}/scholarships/${editingScholarshipId}`, {
+      method: 'PUT',
+      headers: authHeaders,
+      body: JSON.stringify(editScholarship),
+    })
+      .then(res => res.json())
+      .then((updated) => {
+        setScholarships(prev => prev.map(s => s.id === updated.id ? updated : s));
+        setEditingScholarshipId(null);
+      });
+  };
+
   const activeSubject = subjects.find(s => s.id === selectedSubject);
 
   const careersByProgram = allCareers.reduce((acc, c) => {
@@ -503,6 +562,7 @@ function App() {
         <button className="nav-btn" onClick={() => goTo('practiceSubjects')}>✏️ Practice Questions</button>
         <button className="nav-btn" onClick={() => goTo('materialsSubjects')}>📚 Learning Materials</button>
         <button className="nav-btn" onClick={() => goTo('careers')}>💼 Career Paths</button>
+                <button className="nav-btn" onClick={() => goTo('scholarships')}>🎓 Scholarships</button>
         <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border)' }}>
           <button className="nav-btn" onClick={() => goTo('account')}>
             {user ? `👤 ${user.name}` : '👤 Log In / Sign Up'}
@@ -584,6 +644,81 @@ function App() {
   if (view === 'pastSubjects') return <SubjectPicker nextView="pastQuestions" title="Past Questions — Choose a Subject" />;
   if (view === 'practiceSubjects') return <SubjectPicker nextView="practiceQuestions" title="Practice Questions — Choose a Subject" />;
   if (view === 'materialsSubjects') return <SubjectPicker nextView="materials" title="Learning Materials — Choose a Subject" />;
+
+  //---------Scholarship Page--------
+    if (view === 'scholarships') {
+    const shsScholarships = scholarships.filter(s => s.level === 'SHS');
+    const uniScholarships = scholarships.filter(s => s.level === 'University');
+
+    const ScholarshipCard = (s) => (
+      <div className="question-card" key={s.id}>
+        {editingScholarshipId === s.id ? (
+          <>
+            <div className="field"><label>Title</label><input type="text" value={editScholarship.title || ''} onChange={(e) => setEditScholarship({ ...editScholarship, title: e.target.value })} /></div>
+            <div className="field"><label>Description</label><textarea value={editScholarship.description || ''} onChange={(e) => setEditScholarship({ ...editScholarship, description: e.target.value })} /></div>
+            <div className="field"><label>Eligibility</label><textarea value={editScholarship.eligibility || ''} onChange={(e) => setEditScholarship({ ...editScholarship, eligibility: e.target.value })} /></div>
+            <div className="field"><label>Official Link</label><input type="text" value={editScholarship.link || ''} onChange={(e) => setEditScholarship({ ...editScholarship, link: e.target.value })} /></div>
+            <button onClick={saveEditScholarship}>Save</button>
+            <button className="delete-btn" onClick={cancelEditScholarship} style={{ marginLeft: '0.5rem' }}>Cancel</button>
+          </>
+        ) : (
+          <>
+            <p className="q-text"><strong>{s.title}</strong></p>
+            <p className="answer" style={{ color: 'var(--ink-soft)' }}>{s.description}</p>
+            {s.eligibility && <p style={{ fontSize: '0.85rem', marginTop: '0.5rem' }}><strong>Eligibility:</strong> {s.eligibility}</p>}
+            {s.link && (
+              <a href={s.link} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', marginTop: '0.6rem', color: 'var(--primary)', fontWeight: 700, fontSize: '0.85rem' }}>
+                Official page →
+              </a>
+            )}
+            {isAdmin && (
+              <div style={{ marginTop: '0.6rem' }}>
+                <button onClick={() => startEditScholarship(s)}>Edit</button>
+                <button className="delete-btn" onClick={() => handleDeleteScholarship(s.id)} style={{ marginLeft: '0.5rem' }}>Delete</button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    );
+
+    return (
+      <div className="app">
+        <MenuToggle />
+        {menuOpen && <Menu />}
+        <div className="page-header">
+          <button className="back-btn" onClick={() => goTo('home')}>← Back to Home</button>
+        </div>
+        <h2 className="section-title">SHS Scholarships</h2>
+        {shsScholarships.length === 0 && <p className="empty-note">No SHS scholarships added yet.</p>}
+        {shsScholarships.map(ScholarshipCard)}
+
+        <h2 className="section-title">University Scholarships</h2>
+        {uniScholarships.length === 0 && <p className="empty-note">No university scholarships added yet.</p>}
+        {uniScholarships.map(ScholarshipCard)}
+
+        {isAdmin && (
+          <>
+            <h2 className="section-title">Add a Scholarship</h2>
+            <form className="q-form" onSubmit={handleAddScholarship}>
+              <div className="field">
+                <label>Level</label>
+                <select value={scholarshipLevel} onChange={(e) => setScholarshipLevel(e.target.value)}>
+                  <option value="SHS">SHS</option>
+                  <option value="University">University</option>
+                </select>
+              </div>
+              <div className="field"><label>Title</label><input type="text" value={scholarshipTitle} onChange={(e) => setScholarshipTitle(e.target.value)} required /></div>
+              <div className="field"><label>Description</label><textarea value={scholarshipDescription} onChange={(e) => setScholarshipDescription(e.target.value)} required /></div>
+              <div className="field"><label>Eligibility</label><textarea value={scholarshipEligibility} onChange={(e) => setScholarshipEligibility(e.target.value)} /></div>
+              <div className="field"><label>Official Link (optional)</label><input type="text" value={scholarshipLink} onChange={(e) => setScholarshipLink(e.target.value)} placeholder="https://..." /></div>
+              <button type="submit">Add Scholarship</button>
+            </form>
+          </>
+        )}
+      </div>
+    );
+  }
 
   // ---------- CAREERS PAGE ----------
   if (view === 'careers') {
