@@ -35,6 +35,12 @@ async function setupTables() {
     ALTER TABLE questions ADD COLUMN IF NOT EXISTS correct_option TEXT;
   `);
 
+    await pool.query(`
+    ALTER TABLE questions ADD COLUMN IF NOT EXISTS image_url TEXT;
+    ALTER TABLE questions ADD COLUMN IF NOT EXISTS question_type TEXT DEFAULT 'objective';
+    ALTER TABLE questions ADD COLUMN IF NOT EXISTS marks INTEGER;
+  `);
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS careers (
       id SERIAL PRIMARY KEY,

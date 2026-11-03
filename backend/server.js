@@ -195,23 +195,24 @@ app.get('/questions', async (req, res) => {
 });
 
 app.post('/questions', requireAdmin, async (req, res) => {
-  const { subject_id, year, exam_type, question_text, answer_text, option_a, option_b, option_c, option_d, correct_option } = req.body;
+  const { subject_id, year, exam_type, question_text, answer_text, option_a, option_b, option_c, option_d, correct_option, image_url, question_type, marks } = req.body;
   const result = await pool.query(
-    `INSERT INTO questions (subject_id, year, exam_type, question_text, answer_text, option_a, option_b, option_c, option_d, correct_option)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
-    [subject_id, year, exam_type, question_text, answer_text, option_a, option_b, option_c, option_d, correct_option]
+    `INSERT INTO questions (subject_id, year, exam_type, question_text, answer_text, option_a, option_b, option_c, option_d, correct_option, image_url, question_type, marks)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *`,
+    [subject_id, year, exam_type, question_text, answer_text, option_a, option_b, option_c, option_d, correct_option, image_url, question_type || 'objective', marks]
   );
   res.json(result.rows[0]);
 });
 
 app.put('/questions/:id', requireAdmin, async (req, res) => {
   const { id } = req.params;
-  const { year, exam_type, question_text, answer_text, option_a, option_b, option_c, option_d, correct_option } = req.body;
+  const { year, exam_type, question_text, answer_text, option_a, option_b, option_c, option_d, correct_option, image_url, question_type, marks } = req.body;
   const result = await pool.query(
     `UPDATE questions SET year=$1, exam_type=$2, question_text=$3, answer_text=$4,
-     option_a=$5, option_b=$6, option_c=$7, option_d=$8, correct_option=$9
-     WHERE id=$10 RETURNING *`,
-    [year, exam_type, question_text, answer_text, option_a, option_b, option_c, option_d, correct_option, id]
+     option_a=$5, option_b=$6, option_c=$7, option_d=$8, correct_option=$9,
+     image_url=$10, question_type=$11, marks=$12
+     WHERE id=$13 RETURNING *`,
+    [year, exam_type, question_text, answer_text, option_a, option_b, option_c, option_d, correct_option, image_url, question_type || 'objective', marks, id]
   );
   res.json(result.rows[0]);
 });

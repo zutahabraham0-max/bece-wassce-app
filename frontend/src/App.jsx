@@ -52,6 +52,10 @@ function App() {
   const [optionC, setOptionC] = useState('');
   const [optionD, setOptionD] = useState('');
   const [correctOption, setCorrectOption] = useState('A');
+    const [questionType, setQuestionType] = useState('objective');
+  const [imageUrl, setImageUrl] = useState('');
+  const [marks, setMarks] = useState('');
+  const [revealed, setRevealed] = useState({});
 
   // Career form state
   const [program, setProgram] = useState('');
@@ -355,12 +359,16 @@ function App() {
         question_text: questionText, answer_text: answerText,
         option_a: optionA, option_b: optionB, option_c: optionC, option_d: optionD,
         correct_option: correctOption,
+                image_url: imageUrl || null,
+        question_type: questionType,
+        marks: marks ? Number(marks) : null,
       }),
     })
       .then(res => res.json())
       .then(() => {
         setYear(''); setQuestionText(''); setAnswerText('');
         setOptionA(''); setOptionB(''); setOptionC(''); setOptionD(''); setCorrectOption('A');
+                setImageUrl(''); setMarks('');
         loadSubjectData(selectedSubject);
       });
   };
@@ -1027,9 +1035,19 @@ function App() {
               </>
             ) : (
               <>
-                <p className="meta">{q.exam_type} {q.year}</p>
+                                <p className="meta">{q.exam_type} {q.year}{q.question_type === 'theory' && q.marks ? ` · ${q.marks} marks` : ''}</p>
                 <p className="q-text">{q.question_text}</p>
-                <p className="answer">Answer: {q.answer_text}</p>
+                {q.image_url && <img src={q.image_url} alt="Diagram" style={{ maxWidth: '100%', borderRadius: '10px', margin: '0.5rem 0' }} />}
+                {q.question_type === 'theory' ? (
+                  <>
+                    <button onClick={() => setRevealed(prev => ({ ...prev, [q.id]: !prev[q.id] }))}>
+                      {revealed[q.id] ? 'Hide model answer' : 'Show model answer'}
+                    </button>
+                    {revealed[q.id] && <p className="answer" style={{ marginTop: '0.6rem' }}>Model answer: {q.answer_text}</p>}
+                  </>
+                ) : (
+                  <p className="answer">Answer: {q.answer_text}</p>
+                )}
                 {isAdmin && (
                   <>
                     <button onClick={() => startEditQuestion(q)}>Edit</button>
@@ -1052,18 +1070,31 @@ function App() {
                   <option value="BECE">BECE</option><option value="WASSCE">WASSCE</option><option value="Practice">Practice Question</option>
                 </select>
               </div>
-              <div className="field"><label>Question</label><textarea value={questionText} onChange={(e) => setQuestionText(e.target.value)} required /></div>
-              <div className="field"><label>Answer (explanation)</label><textarea value={answerText} onChange={(e) => setAnswerText(e.target.value)} required /></div>
-              <div className="field"><label>Option A</label><input type="text" value={optionA} onChange={(e) => setOptionA(e.target.value)} required /></div>
-              <div className="field"><label>Option B</label><input type="text" value={optionB} onChange={(e) => setOptionB(e.target.value)} required /></div>
-              <div className="field"><label>Option C</label><input type="text" value={optionC} onChange={(e) => setOptionC(e.target.value)} required /></div>
-              <div className="field"><label>Option D</label><input type="text" value={optionD} onChange={(e) => setOptionD(e.target.value)} required /></div>
-              <div className="field">
-                <label>Correct Option</label>
-                <select value={correctOption} onChange={(e) => setCorrectOption(e.target.value)}>
-                  <option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option>
-                </select>
-              </div>
+                              <div className="field">
+                  <label>Question Type</label>
+                  <select value={questionType} onChange={(e) => setQuestionType(e.target.value)}>
+                    <option value="objective">Objective (A-D)</option>
+                    <option value="theory">Theory</option>
+                  </select>
+                </div>
+                <div className="field">
+                  <label>Diagram link (optional)</label>
+                  <input type="text" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://..." />
+                </div>
+                              {questionType === 'objective' && (
+                <>
+                  <div className="field"><label>Option A</label><input type="text" value={optionA} onChange={(e) => setOptionA(e.target.value)} required /></div>
+                  <div className="field"><label>Option B</label><input type="text" value={optionB} onChange={(e) => setOptionB(e.target.value)} required /></div>
+                  <div className="field"><label>Option C</label><input type="text" value={optionC} onChange={(e) => setOptionC(e.target.value)} required /></div>
+                  <div className="field"><label>Option D</label><input type="text" value={optionD} onChange={(e) => setOptionD(e.target.value)} required /></div>
+                  <div className="field">
+                    <label>Correct Option</label>
+                    <select value={correctOption} onChange={(e) => setCorrectOption(e.target.value)}>
+                      <option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option>
+                    </select>
+                  </div>
+                </>
+              )}
               <button type="submit">Add Question</button>
             </form>
           </>
